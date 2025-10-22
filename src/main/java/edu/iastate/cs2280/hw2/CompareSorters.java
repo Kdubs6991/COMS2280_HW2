@@ -99,7 +99,7 @@ public class CompareSorters {
 
           // Print results table and median profile (format must match PDF)
           System.out.println();
-          System.out.println("algorithm size time (ns)");
+          System.out.println("algorithm       size       time (ns)");
           System.out.println("------------------------------------");
 
           for (int i = 0; i < scanners.length; i++) {
@@ -111,10 +111,9 @@ public class CompareSorters {
           Student median = scanners[0].getMedianStudent();
           System.out.println("\nMedian Student Profile: (GPA: " + String.format(java.util.Locale.US,"%.2f", median.getGpa()) + ", Credits: " + median.getCreditsTaken() + ")");
 
-          // Offer CSV export prompt as in the working example
-          handleExportOption(scan, scanners);
-          trial++;
-          break;
+          System.out.println("Exiting program.");
+          scan.close();
+          return;  // end main after one run (no CSV prompt)
         }
         case 2: {
           // File input path: read filename and parse "<gpa> <credits>" lines
@@ -144,7 +143,7 @@ public class CompareSorters {
 
           // Print results table and median profile (format must match PDF)
           System.out.println();
-          System.out.println("algorithm size time (ns)");
+          System.out.println("algorithm       size       time (ns)");
           System.out.println("------------------------------------");
 
           for (int i = 0; i < scanners.length; i++) {
@@ -156,10 +155,9 @@ public class CompareSorters {
           Student median = scanners[0].getMedianStudent();
           System.out.println("\nMedian Student Profile: (GPA: " + String.format(java.util.Locale.US,"%.2f", median.getGpa()) + ", Credits: " + median.getCreditsTaken() + ")");
 
-          // Offer CSV export prompt as in the working example
-          handleExportOption(scan, scanners);
-          trial++;
-          break;
+          System.out.println("Exiting program.");
+          scan.close();
+          return;  // end main after one run (no CSV prompt)
         }
         case 3: {
           System.out.println("Exiting program.");

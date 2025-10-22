@@ -121,7 +121,7 @@ public class StudentScanner {
    * @return formatted stats row with algorithm name, data size, and total time in nanoseconds
    */
   public String stats() {
-    return String.format("%-13s %-5d %d", sortingAlgorithm.name(), students.length, scanTime);
+    return String.format("%-15s %-5d %-10d", sortingAlgorithm, students.length, scanTime);
   }
 
   /**

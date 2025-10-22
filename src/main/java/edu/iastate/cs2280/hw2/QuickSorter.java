@@ -84,6 +84,7 @@ public class QuickSorter extends AbstractSorter {
    */
   private void medianOfThree(int first, int last) {
     int mid = first + (last - first) / 2;
+
     if (studentComparator.compare(students[mid], students[first]) < 0) {
       swap(first, mid);
     }
@@ -93,38 +94,30 @@ public class QuickSorter extends AbstractSorter {
     if (studentComparator.compare(students[last], students[mid]) < 0) {
       swap(mid, last);
     }
-    swap(mid, last - 1);
+
+    swap(mid, last); // move median to the end
   }
 
   /**
-   * Partitions the subarray around the pivot element located at index last - 1.
+   * Partitions the subarray around the pivot element located at index last.
    * Elements less than the pivot are moved to the left, and elements greater or equal
    * to the right. After partitioning, the pivot is placed in its correct sorted position.
    *
    * @param first the starting index of the subarray to partition
-   * @param last the ending index of the subarray to partition
+   * @param last  the ending index of the subarray to partition
    * @return the final index of the pivot element after partitioning
    */
   private int partition(int first, int last) {
-    int left = first + 1;
-    int right = last - 2;
-    Student pivot = students[last - 1];
+    Student pivot = students[last];
+    int i = first; // boundary for elements less than pivot
 
-    while (true) {
-      while (left <= right && studentComparator.compare(students[left], pivot) < 0) {
-        left++;
+    for (int j = first; j < last; j++) {
+      if (studentComparator.compare(students[j], pivot) < 0) {
+        swap(i, j);
+        i++;
       }
-      while (left <= right && studentComparator.compare(students[right], pivot) >= 0) {
-        right--;
-      }
-      if (left >= right) {
-        break;
-      }
-      swap(left, right);
-      left++;
-      right--;
     }
-    swap(left, last - 1);
-    return left;
+    swap(i, last); // move pivot into correct position
+    return i;
   }
 }
