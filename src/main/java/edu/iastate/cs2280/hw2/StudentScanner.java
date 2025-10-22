@@ -1,79 +1,145 @@
-/**
- * @author
- */
 package edu.iastate.cs2280.hw2;
 
 /**
- * This class orchestrates the process of finding a "median student" from an array
- * of Student objects. It does this by sorting the array twice: once by GPA to find
- * the median GPA, and once by credits taken to find the median number of credits.
- * It then constructs a new Student object with these median values. The class
- * also measures the total time taken for both sorting operations for a specific
- * sorting algorithm.
+ * The {@code StudentScanner} orchestrates a two-pass sorting procedure to compute a
+ * "median student" for the HW2 assignment and to measure total runtime for a chosen algorithm.
+ *
+ * <p><b>Two-pass median procedure (per spec):</b>
+ * <ol>
+ *   <li>Sort by <b>Order 0</b> (GPA descending; tie → credits descending) and take the median GPA.</li>
+ *   <li>Sort by <b>Order 1</b> (credits ascending; tie → GPA descending) and take the median credits.</li>
+ * </ol>
+ * The result is a new {@link Student} whose GPA is the median from pass 1 and whose credits
+ * is the median from pass 2.</p>
+ *
+ * <p>Timing is measured in nanoseconds using {@link System#nanoTime()} and includes both
+ * sorting passes executed by the selected algorithm.</p>
+ *
+ * @see AbstractSorter
+ * @see Algorithm
+ * @see Student
+ *
+ * @author Kaleb
  */
 public class StudentScanner {
-  /**
-   * A copy of the student data to be processed.
-   */
+
+  // Internal working copy of the dataset (deep-copied in the constructor)
   private final Student[] students;
-  /**
-   * The sorting algorithm to be used for finding the medians.
-   */
+
+  // Algorithm under test for timing and median computation
   private final Algorithm sortingAlgorithm;
-  /**
-   * The total time in nanoseconds taken by the two sorting operations.
-   */
+
+  // Total elapsed time in nanoseconds for the two-pass sort
   protected long scanTime;
-  /**
-   * The resulting student object with median GPA and median credits.
-   */
+
+  // Median result constructed from pass-1 GPA and pass-2 credits
   private Student medianStudent;
 
   /**
-   * Constructs a StudentScanner. It takes an array of students and the sorting
-   * algorithm to use. A deep copy of the students array is made to avoid
-   * modifying the original array.
+   * Constructs a scanner for a specific sorting algorithm over a deep copy of {@code students}.
+   * The input array is not modified; each element is copied into an internal working array.
    *
-   * @param students The array of students to scan.
-   * @param algo  The sorting algorithm to use.
-   * @throws IllegalArgumentException if the input students array is null or empty.
+   * @param students input dataset; must be non-null, non-empty, and contain no null elements
+   * @param algo algorithm to evaluate (SelectionSort, InsertionSort, MergeSort, or QuickSort)
+   * @throws IllegalArgumentException if {@code students} is null/empty or contains nulls, or if {@code algo} is null
    */
   public StudentScanner(Student[] students, Algorithm algo) {
+    if (students == null || students.length == 0) {
+      throw new IllegalArgumentException("Students array must not be null or empty");
+    }
+    if (algo == null) {
+      throw new IllegalArgumentException();
+    }
+
+    this.students = new Student[students.length];
+    for (int i = 0; i < students.length; i++) {
+      if (students[i] == null) {
+        throw new IllegalArgumentException();
+      }
+
+      // Deep copy the dataset so benchmarking does not mutate client data
+      this.students[i] = new Student(students[i]);
+    }
+
+    this.sortingAlgorithm = algo;
+    this.scanTime = 0L;
+    this.medianStudent = null;
   }
 
   /**
-   * Executes the scanning process. It creates an appropriate sorter based on the
-   * specified algorithm, sorts the students array by GPA, finds the median GPA,
-   * then sorts by credits, and finds the median credits. It calculates the total
-   * time and creates the medianStudent.
+   * Executes the two-pass median workflow and measures total runtime in nanoseconds.
+   * <ol>
+   *   <li>Instantiate the concrete sorter corresponding to {@link #sortingAlgorithm}.</li>
+   *   <li>Set comparator to order 0 and sort; read median GPA.</li>
+   *   <li>Set comparator to order 1 and sort; read median credits.</li>
+   *   <li>Construct {@link #medianStudent} and record {@link #scanTime}.</li>
+   * </ol>
    */
   public void scan() {
+    // Create the appropriate sorter instance for this trial
+    AbstractSorter sorter;
+    switch (sortingAlgorithm) {
+      case SelectionSort:
+        sorter = new SelectionSorter(students);
+        break;
+      case InsertionSort:
+        sorter = new InsertionSorter(students);
+        break;
+      case MergeSort:
+        sorter = new MergeSorter(students);
+        break;
+      case QuickSort:
+        sorter = new QuickSorter(students);
+        break;
+      default:
+        throw new IllegalArgumentException();
+    }
+    // Pass 1: GPA desc (tie → credits desc)
+    sorter.setComparator(0);
+    long start = System.nanoTime();
+    sorter.sort();
+    Student mid0 = sorter.getMedian();
+    double medianGpa = (mid0 == null) ? 0.0 : mid0.getGpa();
+
+    // Pass 2: credits asc (tie → GPA desc)
+    sorter.setComparator(1);
+    sorter.sort();
+    Student mid1 = sorter.getMedian();
+    int medianCredits = (mid1 == null) ? 0 : mid1.getCreditsTaken();
+    this.medianStudent = new Student(medianGpa, medianCredits);
+
+    // Total elapsed time for both passes
+    this.scanTime = System.nanoTime() - start;
   }
 
   /**
-   * Returns a formatted string containing the performance statistics of the scan.
+   * Returns a single formatted line for the results table:
+   * <pre>{@code
+   * algorithm size time (ns)
+   * }</pre>
    *
-   * @return A string with the algorithm name, data size, and total scan time.
+   * @return formatted stats row with algorithm name, data size, and total time in nanoseconds
    */
   public String stats() {
-    return String.format("%-15s %-5d %-10d", sortingAlgorithm, students.length, scanTime);
+    return String.format("%-13s %-5d %d", sortingAlgorithm.name(), students.length, scanTime);
   }
 
   /**
-   * Gets the calculated median student after a scan has been performed.
+   * Returns the computed median student after {@link #scan()} completes.
    *
-   * @return The median student.
+   * @return the median student; may be {@code null} if {@link #scan()} has not been called
    */
   public Student getMedianStudent() {
+    return medianStudent;
   }
 
   /**
-   * Provides a string representation of the StudentScanner's result.
+   * Returns a human-readable description of the computed median profile.
    *
-   * @return A string indicating the median student profile.
+   * @return a string beginning with {@code "Median Student: "}
    */
   @Override
   public String toString() {
-    return "Median Student: " + medianStudent.toString();
+    return (medianStudent == null) ? "Median Student: <not computed>" : "Median Student: " + medianStudent.toString();
   }
 }
